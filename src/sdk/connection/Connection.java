@@ -13,7 +13,7 @@ import java.io.IOException;
 
 public class Connection {
 
-  public static String serverURL = "https://momentify.eu.ngrok.io/api";
+  public static String serverURL = "http://localhost:3000/api";
   private CloseableHttpClient httpClient;
 
   public Connection(){
@@ -21,7 +21,7 @@ public class Connection {
   }
 
 
-  public void execute(HttpUriRequest uriRequest){
+  public void execute(HttpUriRequest uriRequest, final ResponseParser parser){
 
     // Create a custom response handler
     ResponseHandler<String> responseHandler = new ResponseHandler<String>() {
@@ -32,7 +32,7 @@ public class Connection {
           HttpEntity entity = response.getEntity();
           return entity != null ? EntityUtils.toString(entity) : null;
         } else {
-          //Handle error
+          parser.error(status);
         }
         return null;
       }
@@ -42,7 +42,10 @@ public class Connection {
     try {
       String json = this.httpClient.execute(uriRequest, responseHandler);
 
-      //Handle successful response
+      //Make sure to only call payload method if request was successful
+      if(json != null){
+        parser.payload(json);
+      }
 
     } catch (IOException e) {
       e.printStackTrace();
